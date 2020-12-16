@@ -4,54 +4,40 @@
 
 using namespace std;
 
+static void drawBackground(uint8_t);
+
 Board::Board(uint8_t homeY, uint8_t homeX) : homeY(homeY), homeX(homeX)
 {
 	for (uint8_t row = 0; row < 3; row++)
-		for (uint8_t col = 0; col < 3; col++)
-			cells[row][col] = new Cell(homeY + (col * 4), homeX + (row * 4));
+		for (uint8_t cell = 0; cell < 3; cell++)
+		{
+			GOTO_R(homeY + (row * 4), homeX + (cell * 4));
+			cells[row][cell] = new Cell(homeY + (row * 4), homeX + (cell * 4));
+		}
 }
 
 Board::~Board()
 {
-	for (uint8_t col = 0; col < 3; col++)
-		for (uint8_t row = 0; row < 3; row++)
-			delete cells[col][row];
+	for (uint8_t row = 0; row < 3; row++)
+		for (uint8_t cell = 0; cell < 3; cell++)
+			delete cells[row][cell];
 }
 
-Cell& const Board::operator()(uint8_t col, uint8_t row) const
+Cell& Board::operator()(uint8_t row, uint8_t cell) const
 {
-	return *cells[col - 1][row - 1];
+	return *cells[row][cell];
 }
 
 const BoardState Board::getState() const
 {
-	return BoardState(cells);
+	return BoardState::of(cells);
 }
 
 void Board::clear() const
 {
-	for (uint8_t col = 0; col < 3; col++)
+	for (uint8_t row = 0; row < 3; row++)
 		for (uint8_t cell = 0; cell < 3; cell++)
-			*cells[col][cell] = Cell::State::BLANK;
-}
-
-static void drawBackground(uint8_t xOff)
-{
-	BACKWARD_R(xOff);
-	for (uint8_t col = 0; col < 3; col++)
-	{
-		for (uint8_t line = 0; line < 3; line++)
-		{
-			FORWARD_R(xOff);
-			cout << "   |   |\n";
-		}
-
-		if (col != 2)
-		{
-			FORWARD_R(xOff);
-			cout << "---+---+---\n";
-		}
-	}
+			*cells[row][cell] = Cell::State::BLANK;
 }
 
 void Board::draw() const
@@ -60,7 +46,26 @@ void Board::draw() const
 
 	drawBackground(homeX - 1);
 
-	for (uint8_t col = 0; col < 3; col++)
+	for (uint8_t row = 0; row < 3; row++)
 		for (uint8_t cell = 0; cell < 3; cell++)
-			cells[col][cell]->draw();
+			cells[row][cell]->draw();
+}
+
+void drawBackground(uint8_t xOff)
+{
+	BACKWARD_R(xOff);
+	for (uint8_t row = 0; row < 3; row++)
+	{
+		for (uint8_t line = 0; line < 3; line++)
+		{
+			FORWARD_R(xOff);
+			cout << "   |   |\n";
+		}
+
+		if (row != 2)
+		{
+			FORWARD_R(xOff);
+			cout << "---+---+---\n";
+		}
+	}
 }

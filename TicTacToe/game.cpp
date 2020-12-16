@@ -1,9 +1,12 @@
-#include <Windows.h>
 #include <iostream>
+#include <cstring>
+#include <string>
 #include "terminal_control.h"
 #include "game.h"
 
 using namespace std;
+
+static const string invalidInput(const string&, size_t);
 
 TicTacToe::TicTacToe()
 {
@@ -22,13 +25,16 @@ TicTacToe::TicTacToe()
 
 	textBottom = new TextBox(pos.Y + 4, pos.X);
 	textMain = new TextBox(pos.Y - 3, pos.X + 15);
-	textWarn = new TextBox(pos.Y - 6, pos.X + 15);
+	textWarn = new WarnBox(pos.Y - 6, pos.X + 15);
 }
 
 TicTacToe::~TicTacToe()
 {
-	delete &computer, &board, &textWarn, &textMain, &textBottom;
+	delete &computer, &board, &textMain, &textBottom, &textWarn;
 }
+
+static Cell::State player;
+static Cell::State turn;
 
 void TicTacToe::loop()
 {
@@ -39,55 +45,27 @@ void TicTacToe::loop()
 	while (1)
 	{
 		board.clear();
-		Cell::State playerSign = player_select();
-		Cell::State aiSign = Cell::oppositeOf(playerSign);
+
+		player = playerSelect();
+		Cell::State aiSign = Cell::oppositeOf(player);
 		computer.setSign(aiSign);
 
-		Cell::State currentTurn = playerGoingFirst ? playerSign : aiSign;
-		bool gameOver = false;
+		Cell::State turn = playerGoingFirst ? player : aiSign;
 
-		while (!gameOver)
+		while (1)
 		{
-			if (currentTurn == playerSign)
-			{
-				string pos = input("Row and col (xy): ");
-				const char row[] = { pos[0], '\0' };
-				const char col[] = { pos[1], '\0' };
+			const BoardPos move = (turn == player) ? selectPos() : computer.decideMove(board.getState());
+			board(move.row, move.cell) = turn;
 
-				board(atoi(row), atoi(col)) = playerSign;
-			}
-			else
-			{
-				BoardPos ai_move = computer.decideMove(board.getState());
+			if (checkGameOver())
+				break;
 
-				board(ai_move.col, ai_move.row) = aiSign;
-			}
-
-			BoardState currentState = board.getState();
-			int eval = currentState.evaluate(currentTurn);
-			if (eval == BoardState::WIN)
-			{
-				gameOver = true;
-				textBottom->clear();
-				if (currentTurn == playerSign)
-					textBottom->show("You have beaten the computer!");
-				else
-					textBottom->show("The computer defeated you. Very sad");
-			}
-			else if (!currentState.moves_left())
-			{
-				gameOver = true;
-				textBottom->clear();
-				textBottom->show("We've reached a draw");
-			}
-
-			currentTurn = Cell::oppositeOf(currentTurn);
+			turn = Cell::oppositeOf(turn);
 		}
 
 		string playAgain = input("Play again (y/n)? ");
 		if (playAgain == "n")
 		{
-			textMain->clear();
 			textBottom->clear();
 			textMain->show("Thanks for playing! <3");
 			while (1) {}
@@ -98,21 +76,101 @@ void TicTacToe::loop()
 	}
 }
 
-Cell::State TicTacToe::player_select() const
+bool TicTacToe::checkGameOver() const
 {
-	string chosen_player = input(RED("X") " or " CYAN("O") "? ");
+	const Board& board = *this->board;
 
-	if (chosen_player == "X")
-		return Cell::State::X;
-	else if (chosen_player == "O")
-		return Cell::State::O;
+	BoardState currentState = board.getState();
+	int8_t eval = currentState.evaluate(turn);
+
+	if (eval == BoardState::WIN)
+	{
+		const char* const endMessage = (turn == player) ? 
+			"You have beaten the computer!" :
+			"The computer defeated you. Very sad";
+
+		textBottom->show(endMessage);
+		return true;
+	}
+	else if (!currentState.movesLeft())
+	{
+		textBottom->show("We've reached a draw");
+		return true;
+	}
+
+	return false;
 }
 
-string TicTacToe::input(const char* const query) const
+const Cell::State TicTacToe::playerSelect() const
+{
+	while (1)
+	{
+		string out = input(RED("X") " or " CYAN("O") "? ");
+
+		if (out.length() != 1)
+		{
+			textWarn->show(invalidInput(out, 24).c_str());
+			continue;
+		}
+		else
+		{
+			out[0] = toupper(out[0]);
+
+			if (out == "X")
+			{
+				textWarn->clear();
+				return Cell::State::X;
+			}
+			else if (out == "O")
+			{
+				textWarn->clear();
+				return Cell::State::O;
+			}
+			else
+				continue;
+		}
+	}
+}
+
+const string invalidInput(const string& input, size_t maxSize)
+{
+	string out("Invalid input \"");
+
+	out.append(input);
+
+	if (out.size() > maxSize)
+	{
+		out.resize(maxSize - 4);
+		out.append("...\"");
+	}
+	else
+	{
+		out.append("\"");
+	}
+
+	return out;
+}
+
+const BoardPos TicTacToe::selectPos() const
+{
+	BoardPos out;
+	string pos = input("Column and row (xy): ");
+
+	const char cell[] = { pos[0], '\0' };
+	const char row[] = { pos[1], '\0' };
+
+	out.cell = atoi(cell) - 1;
+	out.row = atoi(row) - 1;
+
+	return out;
+}
+
+const string TicTacToe::input(const char* const query) const
 {
 	textMain->show(query);
 	string in;
-	cin >> in;
+
+	getline(cin, in);
 
 	return in;
 }

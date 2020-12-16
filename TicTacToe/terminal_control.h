@@ -33,9 +33,15 @@ const_term_expr FG_BLACK()
 	return FORMAT(30);
 }
 
+
 const_term_expr FG_WHITE()
 {
 	return FORMAT(97);
+}
+
+const_term_expr FG_RED()
+{
+	return FORMAT(31);
 }
 
 const_term_expr BG_BLACK()

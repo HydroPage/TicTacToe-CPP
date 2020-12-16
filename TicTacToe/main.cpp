@@ -9,9 +9,8 @@ int main()
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(stdOut, dwMode);
 
-	SetConsoleTitle(L"Tic Tac Toe");
+	SetConsoleTitle(L"Tic Tac Toe 1.1");
 
 	TicTacToe game;
-
 	game.loop();
 }

@@ -8,8 +8,7 @@ struct Board
 	Board(uint8_t homeY, uint8_t homeX);
 	~Board();
 
-	Cell& operator()(uint8_t col, uint8_t row) const;
-
+	Cell& operator()(uint8_t row, uint8_t cell) const;
 	const BoardState getState() const;
 
 	void clear() const;

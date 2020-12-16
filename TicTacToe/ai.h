@@ -5,9 +5,9 @@
 struct BoardPos
 {
 	BoardPos();
-	BoardPos(uint8_t col, uint8_t row);
+	BoardPos(uint8_t row, uint8_t cell);
 
-	uint8_t col, row;
+	uint8_t row, cell;
 };
 
 struct AIPlayer

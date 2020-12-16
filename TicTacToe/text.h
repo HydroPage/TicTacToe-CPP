@@ -1,15 +1,20 @@
 #pragma once
 
-#include <Windows.h>
-
 struct TextBox
 {
-	TextBox();
-	TextBox(uint8_t Y, uint8_t X);
+	TextBox() : Y(0), X(0) {}
+	TextBox(uint8_t Y, uint8_t X) : Y(Y), X(X) {}
 
-	virtual void show(const char* const) const;
+	void show(const char* const) const;
 	void clear() const;
 
-private:
+protected:
 	uint8_t Y, X;
+};
+
+struct WarnBox : TextBox
+{
+	WarnBox(uint8_t Y, uint8_t X) : TextBox(Y, X) {}
+
+	void show(const char* const) const;
 };

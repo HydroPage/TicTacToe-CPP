@@ -1,43 +1,45 @@
 #include "board_state.h"
 
-const int8_t BoardState::NEUTRAL = 0, BoardState::WIN = 10, BoardState::LOSS = -10;
+template<typename T>
+static constexpr bool allEqual(T first, T second, T third);
+
+const int8_t BoardState::NEUTRAL = 0, BoardState::WIN = 1, BoardState::LOSS = -1;
 
 BoardState::BoardState(Cell* const cells[3][3])
 {
-	for (uint8_t col = 0; col < 3; col++)
-		for (uint8_t row = 0; row < 3; row++)
-			state[col][row] = *cells[col][row];
+	for (uint8_t row = 0; row < 3; row++)
+		for (uint8_t cell = 0; cell < 3; cell++)
+			state[row][cell] = *cells[row][cell];
 }
 
-Cell::State& BoardState::operator()(uint8_t col, uint8_t row)
+BoardState BoardState::of(Cell* const cells[3][3])
 {
-	return state[col][row];
+	return BoardState(cells);
 }
 
-const Cell::State& BoardState::operator()(uint8_t col, uint8_t row) const
+Cell::State& BoardState::operator()(uint8_t row, uint8_t cell)
 {
-	return state[col][row];
+	return state[row][cell];
 }
 
-template<typename T>
-static constexpr bool allEqual(T first, T second, T third)
+const Cell::State& BoardState::operator()(uint8_t row, uint8_t cell) const
 {
-	return (first == second) && (second == third);
+	return state[row][cell];
 }
 
 int BoardState::evaluate(Cell::State perspective) const
 {
 	const BoardState& board = *this;
 
-	// rows
-	for (uint8_t col = 0; col < 3; col++)
-		if (allEqual(board(col, 0), board(col, 1), board(col, 2)) && !Cell::isBlank(board(col, 0)))
-			return (board(col, 0) == perspective) ? WIN : LOSS;
-
 	// cols
 	for (uint8_t row = 0; row < 3; row++)
-		if ((board(0, row) == board(1, row)) && (board(1, row) == board(2, row)) && !Cell::isBlank(board(0, row)))
-			return (board(0, row) == perspective) ? WIN : LOSS;
+		if (allEqual(board(row, 0), board(row, 1), board(row, 2)) && !Cell::isBlank(board(row, 0)))
+			return (board(row, 0) == perspective) ? WIN : LOSS;
+
+	// rows
+	for (uint8_t cell = 0; cell < 3; cell++)
+		if (allEqual(board(0, cell), board(1, cell), board(2, cell)) && !Cell::isBlank(board(0, cell)))
+			return (board(0, cell) == perspective) ? WIN : LOSS;
 
 	// diags
 	bool diag1 = allEqual(board(0, 0), board(1, 1), board(2, 2));
@@ -48,11 +50,17 @@ int BoardState::evaluate(Cell::State perspective) const
 	return NEUTRAL;
 }
 
-bool BoardState::moves_left() const
+template<typename T>
+constexpr bool allEqual(T first, T second, T third)
 {
-	for (uint8_t col = 0; col < 3; col++)
-		for (uint8_t row = 0; row < 3; row++)
-			if (Cell::isBlank(state[col][row]))
+	return (first == second) && (second == third);
+}
+
+bool BoardState::movesLeft() const
+{
+	for (uint8_t row = 0; row < 3; row++)
+		for (uint8_t cell = 0; cell < 3; cell++)
+			if (Cell::isBlank(state[row][cell]))
 				return true;
 	return false;
 }
