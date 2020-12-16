@@ -11,10 +11,6 @@ int main()
 
 	SetConsoleTitle(L"Tic Tac Toe");
 
-	COORD size;
-	size.Y = 50; size.X = 50;
-	SetConsoleScreenBufferSize(stdOut, size);
-
 	TicTacToe game;
 
 	game.loop();
