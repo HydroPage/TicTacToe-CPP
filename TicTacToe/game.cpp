@@ -6,6 +6,7 @@
 
 using namespace std;
 
+static bool isNumeric(const string&);
 static const string invalidInput(const string&, size_t);
 
 TicTacToe::TicTacToe()
@@ -33,6 +34,9 @@ TicTacToe::~TicTacToe()
 	delete &computer, &board, &textMain, &textBottom, &textWarn;
 }
 
+TicTacToe::BadInput::BadInput(const char* const msg) : msg(msg) {}
+TicTacToe::BadInput::BadInput(const string& msgStr) : BadInput(msgStr.c_str()) {}
+
 static Cell::State player;
 static Cell::State turn;
 
@@ -50,7 +54,7 @@ void TicTacToe::loop()
 		Cell::State aiSign = Cell::oppositeOf(player);
 		computer.setSign(aiSign);
 
-		Cell::State turn = playerGoingFirst ? player : aiSign;
+		turn = playerGoingFirst ? player : aiSign;
 
 		while (1)
 		{
@@ -132,6 +136,65 @@ const Cell::State TicTacToe::playerSelect() const
 	}
 }
 
+const BoardPos TicTacToe::selectPos() const
+{
+	BoardPos out;
+
+	while (true)
+	try
+	{
+		string posInputStr = input("Column and row (xy): ");
+
+		if (isNumeric(posInputStr))
+		{
+			if (posInputStr.size() == 2)
+			{
+				const char cell[] = { posInputStr[0], '\0' };
+				const char row[]  = { posInputStr[1], '\0' };
+
+				out.cell = atoi(cell) - 1;
+				out.row  = atoi(row)  - 1;
+
+				bool cellInRange = out.cell >= 0 && out.cell <= 2;
+				bool rowInRange  = out.row  >= 0 && out.row  <= 2;
+
+				if (cellInRange && rowInRange)
+				{
+					return out;
+				}
+				else throw BadInput("Only numbers 1-3");
+			}
+			else throw BadInput(string("Just two numbers, that's ") + to_string(posInputStr.size()));
+		}
+		else throw BadInput("Numbers only please");
+	}
+	catch (BadInput& err)
+	{
+		textWarn->show(err.msg);
+	}
+}
+
+bool isNumeric(const string& str)
+{
+	for (const auto &c : str)
+	{
+		if (!isdigit(c))
+			return false;
+	}
+
+	return true;
+}
+
+const string TicTacToe::input(const char* const query) const
+{
+	textMain->show(query);
+	string in;
+
+	getline(cin, in);
+
+	return in;
+}
+
 const string invalidInput(const string& input, size_t maxSize)
 {
 	string out("Invalid input \"");
@@ -149,28 +212,4 @@ const string invalidInput(const string& input, size_t maxSize)
 	}
 
 	return out;
-}
-
-const BoardPos TicTacToe::selectPos() const
-{
-	BoardPos out;
-	string pos = input("Column and row (xy): ");
-
-	const char cell[] = { pos[0], '\0' };
-	const char row[] = { pos[1], '\0' };
-
-	out.cell = atoi(cell) - 1;
-	out.row = atoi(row) - 1;
-
-	return out;
-}
-
-const string TicTacToe::input(const char* const query) const
-{
-	textMain->show(query);
-	string in;
-
-	getline(cin, in);
-
-	return in;
 }

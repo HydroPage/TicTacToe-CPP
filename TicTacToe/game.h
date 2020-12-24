@@ -18,6 +18,13 @@ private:
 	const TextBox *textMain, *textBottom;
 	const WarnBox *textWarn;
 
+	struct BadInput
+	{
+		BadInput(const std::string&);
+		BadInput(const char* const);
+		const char* const msg;
+	};
+
 	bool checkGameOver() const;
 	const BoardPos selectPos() const;
 	const Cell::State playerSelect() const;
